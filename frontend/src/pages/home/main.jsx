@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getHello } from '../../api';
 import BottomNavigation from '../../components/common/bottom_navigation';
 
 const games = [
@@ -10,6 +11,16 @@ const games = [
 function Home() {
   const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState(null);
+  const [apiMessage, setApiMessage] = useState('');
+
+  const callBackend = async () => {
+    try {
+      const data = await getHello();
+      setApiMessage(data.message);
+    } catch (error) {
+      setApiMessage(error.message);
+    }
+  };
 
   return (
     <main className="app-screen">
@@ -47,6 +58,14 @@ function Home() {
             );
           })}
         </div>
+      </section>
+
+      <section className="section" aria-labelledby="api-example-title">
+        <h2 className="section-title" id="api-example-title">백엔드 API 예제</h2>
+        <button className="button-primary" type="button" onClick={callBackend}>
+          API 호출
+        </button>
+        {apiMessage && <p className="muted">{apiMessage}</p>}
       </section>
 
       <BottomNavigation />
