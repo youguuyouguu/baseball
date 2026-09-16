@@ -1,13 +1,62 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { generateSchedule } from '../../api';
 
 const places = [
-  { id: 1, name: '부산 자갈치시장', category: '관광', tags: ['시장', '먹거리'], distance: '경기장까지 도보 10분', x: 26, y: 32 },
-  { id: 2, name: '해운대원조할매국밥', category: '식당', tags: ['국밥', '맛집'], distance: '경기장까지 도보 5분', x: 68, y: 24 },
-  { id: 3, name: '더베이101', category: '관광', tags: ['야경', '바다'], distance: '경기장까지 차량 12분', x: 48, y: 56 },
-  { id: 4, name: '광안리 오션뷰 카페', category: '카페', tags: ['카페', '바다'], distance: '경기장까지 차량 15분', x: 78, y: 66 },
-  { id: 5, name: '부산역 근처 숙소', category: '숙소', tags: ['숙소', '역세권'], distance: '경기장까지 차량 20분', x: 18, y: 72 },
+  { id: 'jagalchi', name: '부산 자갈치시장', category: '관광', tags: ['시장', '먹거리'], distance: '경기장까지 차량 10분', visit_minutes: 60, opening_time: '10:00:00', closing_time: '22:00:00', address: '부산광역시 중구' },
+  { id: 'gukbap', name: '해운대원조할매국밥', category: '식당', tags: ['국밥', '맛집'], distance: '경기장까지 차량 5분', visit_minutes: 60, opening_time: '08:00:00', closing_time: '21:00:00', address: '부산광역시 해운대구' },
+  { id: 'bay101', name: '더베이101', category: '관광', tags: ['야경', '바다'], distance: '경기장까지 차량 12분', visit_minutes: 90, opening_time: '10:00:00', closing_time: '22:00:00', address: '부산광역시 해운대구' },
+  { id: 'gwangalli', name: '광안리 오션뷰 카페', category: '카페', tags: ['카페', '바다'], distance: '경기장까지 차량 15분', visit_minutes: 60, opening_time: '09:00:00', closing_time: '22:00:00', address: '부산광역시 수영구' },
+  { id: 'hotel', name: '부산역 근처 숙소', category: '숙소', tags: ['숙소', '역세권'], distance: '경기장까지 차량 20분', visit_minutes: 30, opening_time: '00:00:00', closing_time: '23:59:00', address: '부산광역시 동구' },
 ];
+
+const DEFAULT_STADIUM = { id: 'stadium', name: '사직야구장', address: '부산광역시 동래구' };
+const DEFAULT_RETURN_STATION = { id: 'busan-station', name: '부산역', address: '부산광역시 동구' };
+
+function toDateTime(date, time) {
+  return `${date}T${time}:00`;
+}
+
+function buildTravelTimes(schedule, selectedPlaces) {
+  const ids = ['departure', DEFAULT_STADIUM.id, DEFAULT_RETURN_STATION.id, ...selectedPlaces.map((place) => place.id)];
+  return Object.fromEntries(ids.map((source) => [
+    source,
+    Object.fromEntries(ids.filter((target) => target !== source).map((target) => [target, source === target ? 0 : 20])),
+  ]));
+}
+
+function buildScheduleRequest(schedule, selectedPlaces) {
+  const location = (id, name, address) => ({ id, name, address });
+  const date = schedule.startDate;
+
+  return {
+    participant_count: Number(schedule.people),
+    game: {
+      stadium: DEFAULT_STADIUM,
+      start_time: toDateTime(date, '18:30'),
+    },
+    start_point: {
+      location: location('departure', schedule.departure, schedule.address || schedule.departure),
+      arrival_time: toDateTime(date, schedule.arrivalTime),
+    },
+    end_point: {
+      return_transport: {
+        location: DEFAULT_RETURN_STATION,
+        departure_time: toDateTime(schedule.endDate, schedule.returnTime),
+      },
+    },
+    places: selectedPlaces.map((place) => ({
+      id: place.id,
+      name: place.name,
+      location: location(place.id, place.name, place.address),
+      visit_minutes: place.visit_minutes,
+      opening_time: place.opening_time,
+      closing_time: place.closing_time,
+    })),
+    travel_times: buildTravelTimes(schedule, selectedPlaces),
+    congestion_cache: {},
+  };
+}
 
 const categories = ['전체', '관광', '식당', '숙소', '카페'];
 
@@ -21,6 +70,8 @@ function AddTouristSpot() {
   const [addedPlaces, setAddedPlaces] = useState([]);
   const [zoom, setZoom] = useState(1);
   const [stadiumFocused, setStadiumFocused] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredPlaces = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -41,6 +92,24 @@ function AddTouristSpot() {
   };
 
   const isAdded = (place) => addedPlaces.some((item) => item.id === place.id);
+
+  const createSchedule = async () => {
+    if (!state?.schedule || addedPlaces.length === 0) {
+      setMessage('일정 정보와 방문할 장소를 선택해 주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage('일정을 계산하고 있습니다.');
+    try {
+      const result = await generateSchedule(buildScheduleRequest(state.schedule, addedPlaces));
+      navigate('/schedule/all', { state: { schedule: state.schedule, places: addedPlaces, generatedSchedule: result } });
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main className="app-screen">
@@ -129,9 +198,10 @@ function AddTouristSpot() {
         </section>
       )}
 
+      {message && <p className="alert" role="alert">{message}</p>}
       <p>선택한 장소: {addedPlaces.length}곳</p>
-      <button className="button-primary button-full" type="button" onClick={() => navigate('/schedule/all', { state: { schedule: state?.schedule, places: addedPlaces } })}>
-        완료
+      <button className="button-primary button-full" type="button" onClick={createSchedule} disabled={isSubmitting}>
+        {isSubmitting ? '일정 생성 중...' : '일정 생성'}
       </button>
     </main>
   );
