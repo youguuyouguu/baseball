@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const initialForm = {
-	match: '',
+	match: 'default-game',
 	startDate: '',
 	endDate: '',
 	departure: '',
 	address: '',
 	people: 1,
+	arrivalTime: '11:00',
+	returnTime: '23:00',
 };
 
 function AddSchedule() {
@@ -32,7 +34,7 @@ function AddSchedule() {
 	const handleSubmit = (event) => {
 		event.preventDefault();
 
-		if (!form.match || !form.startDate || !form.endDate || !form.departure) {
+		if (!form.startDate || !form.endDate || !form.departure) {
 			setMessage('경기, 일정, 출발지를 모두 입력해 주세요.');
 			return;
 		}
@@ -76,6 +78,10 @@ function AddSchedule() {
 					<input className="form-input" id="departure" name="departure" value={form.departure} onChange={updateField} placeholder="출발 지역을 입력해 주세요" />
 					<label className="form-label" htmlFor="address">주소 검색</label>
 					<input className="form-input" id="address" name="address" value={form.address} onChange={updateField} placeholder="주소 검색" />
+					<label className="form-label" htmlFor="arrivalTime">출발지 도착 시각</label>
+					<input className="form-input" id="arrivalTime" name="arrivalTime" type="time" value={form.arrivalTime} onChange={updateField} />
+					<label className="form-label" htmlFor="returnTime">귀가 교통편 출발 시각</label>
+					<input className="form-input" id="returnTime" name="returnTime" type="time" value={form.returnTime} onChange={updateField} />
 				</fieldset>
 
 				<fieldset className="form-fieldset">
