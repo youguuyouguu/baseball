@@ -1,17 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateSchedule } from '../../api';
-
-const places = [
-  { id: 'jagalchi', name: '부산 자갈치시장', category: '관광', tags: ['시장', '먹거리'], distance: '경기장까지 차량 10분', visit_minutes: 60, opening_time: '10:00:00', closing_time: '22:00:00', address: '부산광역시 중구' },
-  { id: 'gukbap', name: '해운대원조할매국밥', category: '식당', tags: ['국밥', '맛집'], distance: '경기장까지 차량 5분', visit_minutes: 60, opening_time: '08:00:00', closing_time: '21:00:00', address: '부산광역시 해운대구' },
-  { id: 'bay101', name: '더베이101', category: '관광', tags: ['야경', '바다'], distance: '경기장까지 차량 12분', visit_minutes: 90, opening_time: '10:00:00', closing_time: '22:00:00', address: '부산광역시 해운대구' },
-  { id: 'gwangalli', name: '광안리 오션뷰 카페', category: '카페', tags: ['카페', '바다'], distance: '경기장까지 차량 15분', visit_minutes: 60, opening_time: '09:00:00', closing_time: '22:00:00', address: '부산광역시 수영구' },
-  { id: 'hotel', name: '부산역 근처 숙소', category: '숙소', tags: ['숙소', '역세권'], distance: '경기장까지 차량 20분', visit_minutes: 30, opening_time: '00:00:00', closing_time: '23:59:00', address: '부산광역시 동구' },
-];
+import { loadKakao, searchKakaoPlaces, STADIUM } from '../../lib/kakao';
 
 const DEFAULT_STADIUM = { id: 'stadium', name: '사직야구장', address: '부산광역시 동래구' };
 const DEFAULT_RETURN_STATION = { id: 'busan-station', name: '부산역', address: '부산광역시 동구' };
+const categories = ['전체', '관광', '식당', '숙소', '카페'];
 
 function toDateTime(date, time) {
   return `${date}T${time}:00`;
@@ -58,30 +52,67 @@ function buildScheduleRequest(schedule, selectedPlaces) {
   };
 }
 
-const categories = ['전체', '관광', '식당', '숙소', '카페'];
-
 function AddTouristSpot() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const mapNode = useRef(null);
+  const mapObj = useRef(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('전체');
   const [view, setView] = useState('list');
+  const [places, setPlaces] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [addedPlaces, setAddedPlaces] = useState([]);
-  const [zoom, setZoom] = useState(1);
-  const [stadiumFocused, setStadiumFocused] = useState(false);
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredPlaces = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchKakaoPlaces(query, category)
+        .then((results) => {
+          setPlaces(results);
+          setSelectedPlace(null);
+          setMessage('');
+        })
+        .catch((error) => {
+          setPlaces([]);
+          setMessage(error.message);
+        });
+    }, 300);
 
-    return places.filter((place) => {
-      const matchesCategory = category === '전체' || place.category === category;
-      const searchableText = [place.name, place.category, ...place.tags].join(' ').toLowerCase();
-      return matchesCategory && (!normalizedQuery || searchableText.includes(normalizedQuery));
-    });
-  }, [category, query]);
+    return () => clearTimeout(timer);
+  }, [query, category]);
+
+  useEffect(() => {
+    if (view !== 'map') return undefined;
+
+    let cancelled = false;
+
+    loadKakao()
+      .then((kakao) => {
+        if (cancelled || !mapNode.current) return;
+
+        const map = new kakao.maps.Map(mapNode.current, {
+          center: new kakao.maps.LatLng(STADIUM.lat, STADIUM.lng),
+          level: 5,
+        });
+        mapObj.current = map;
+
+        places.forEach((place) => {
+          const marker = new kakao.maps.Marker({
+            map,
+            position: new kakao.maps.LatLng(place.lat, place.lng),
+          });
+          kakao.maps.event.addListener(marker, 'click', () => setSelectedPlace(place));
+        });
+      })
+      .catch((error) => setMessage(error.message));
+
+    return () => {
+      cancelled = true;
+      mapObj.current = null;
+    };
+  }, [view, places]);
 
   const togglePlace = (place) => {
     setAddedPlaces((current) => (
@@ -92,6 +123,17 @@ function AddTouristSpot() {
   };
 
   const isAdded = (place) => addedPlaces.some((item) => item.id === place.id);
+
+  const moveToStadium = () => {
+    if (!mapObj.current || !window.kakao) return;
+    mapObj.current.setCenter(new window.kakao.maps.LatLng(STADIUM.lat, STADIUM.lng));
+    mapObj.current.setLevel(5);
+  };
+
+  const zoom = (amount) => {
+    if (!mapObj.current) return;
+    mapObj.current.setLevel(mapObj.current.getLevel() + amount);
+  };
 
   const createSchedule = async () => {
     if (!state?.schedule || addedPlaces.length === 0) {
@@ -149,13 +191,13 @@ function AddTouristSpot() {
 
       {view === 'list' ? (
         <section className="place-list" aria-label="장소 목록">
-          {filteredPlaces.length === 0 && <p>검색 결과가 없습니다.</p>}
-          {filteredPlaces.map((place) => (
+          {places.length === 0 && <p>검색 결과가 없습니다.</p>}
+          {places.map((place) => (
             <article className="place-card" key={place.id}>
-              <div className="place-image" aria-label={`${place.name} 이미지`}>사진</div>
               <div>
                 <h2>{place.name}</h2>
                 <div className="tag-list">{place.tags.map((tag) => <span className="tag" key={tag}>#{tag}</span>)}</div>
+                <p>{place.address}</p>
                 <p>{place.distance}</p>
               </div>
               <button className={isAdded(place) ? 'button-secondary' : 'button-primary'} type="button" onClick={() => togglePlace(place)}>
@@ -167,20 +209,11 @@ function AddTouristSpot() {
       ) : (
         <section aria-label="장소 지도">
           <div className="map-panel">
-            <p>지도 영역</p>
+            <div className="kakao-map" ref={mapNode} />
             <div className="map-controls">
-              <button className="button-secondary" type="button" onClick={() => setStadiumFocused(true)}>경기장 위치</button>
-              <button className="button-secondary" type="button" onClick={() => setZoom((current) => Math.min(3, current + 1))} aria-label="지도 확대">+</button>
-              <button className="button-secondary" type="button" onClick={() => setZoom((current) => Math.max(1, current - 1))} aria-label="지도 축소">-</button>
-            </div>
-            <p>확대 단계: {zoom}</p>
-            {stadiumFocused && <p>경기장 위치를 중심으로 표시 중입니다.</p>}
-            <div className="map-marker-list">
-              {filteredPlaces.map((place) => (
-                <button className={`map-marker${isAdded(place) ? ' is-added' : ''}`} key={place.id} type="button" onClick={() => setSelectedPlace(place)} aria-label={`${place.name} 마커`}>
-                  {isAdded(place) ? '선택된 마커' : '마커'}: {place.name}
-                </button>
-              ))}
+              <button className="button-secondary" type="button" onClick={moveToStadium}>경기장 위치</button>
+              <button className="button-secondary" type="button" onClick={() => zoom(-1)} aria-label="지도 확대">+</button>
+              <button className="button-secondary" type="button" onClick={() => zoom(1)} aria-label="지도 축소">-</button>
             </div>
           </div>
 
@@ -188,7 +221,7 @@ function AddTouristSpot() {
             <article className="detail-card">
               <div className="drag-bar" role="separator" aria-label="상세정보 카드 드래그 바" />
               <h2>{selectedPlace.name}</h2>
-              <p>{selectedPlace.category} · {selectedPlace.tags.join(', ')}</p>
+              <p>{selectedPlace.category} · {selectedPlace.address}</p>
               <p>{selectedPlace.distance}</p>
               <button className={isAdded(selectedPlace) ? 'button-secondary' : 'button-primary'} type="button" onClick={() => togglePlace(selectedPlace)}>
                 {isAdded(selectedPlace) ? '취소' : '추가'}
