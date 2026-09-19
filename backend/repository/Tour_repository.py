@@ -5,8 +5,6 @@ from supabase import Client
 
 
 class TourRepository:
-    """Tour 테이블과 직접 상호작용하는 Repository 클래스."""
-
     TABLE_NAME = "Tour"
 
     def __init__(self, supabase: Client):
