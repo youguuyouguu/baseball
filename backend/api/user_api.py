@@ -12,6 +12,7 @@ from repository.User_repository import UserRepository
 # ============================================================
 
 class UserCreate(BaseModel):
+    user_id: int
     email: str
     nickname: str
 
@@ -33,7 +34,6 @@ def create_user_router(supabase: Client):
         tags=["User"]
     )
 
-    # 전달받은 Supabase 클라이언트를 이용해 Repository 생성
     user_repository = UserRepository(supabase)
 
 
@@ -45,6 +45,7 @@ def create_user_router(supabase: Client):
     def create_user(user: UserCreate):
 
         result = user_repository.create_user(
+            user_id=user.user_id,
             email=user.email,
             nickname=user.nickname
         )
@@ -65,7 +66,7 @@ def create_user_router(supabase: Client):
     @router.get("/{user_id}")
     def get_user(user_id: int):
 
-        result = user_repository.get_user_by_id(user_id)
+        result = user_repository.get_user(user_id)
 
         if result is None:
             raise HTTPException(
@@ -101,7 +102,7 @@ def create_user_router(supabase: Client):
     @router.get("/")
     def get_all_users():
 
-        return user_repository.get_all_users()
+        return user_repository.get_users()
 
 
     # ========================================================

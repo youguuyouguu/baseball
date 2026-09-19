@@ -33,12 +33,12 @@ function buildScheduleRequest(schedule, selectedPlaces) {
     participant_count: Number(schedule.people),
     game: {
       stadium: DEFAULT_STADIUM,
-      start_time: toDateTime(date, '18:30'),
+      start_time: toDateTime(date, '18:30'), // 실제 경기장, 경기 시간으로 변경
     },
     start_point: {
       location: location('departure', schedule.departure, schedule.address || schedule.departure),
       arrival_time: toDateTime(date, schedule.arrivalTime),
-    },
+    }, 
     end_point: {
       return_transport: {
         location: DEFAULT_RETURN_STATION,
