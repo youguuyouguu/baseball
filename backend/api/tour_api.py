@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -8,17 +9,17 @@ from service.Tour_service import TourService
 
 
 class TourCreate(BaseModel):
-    schedule_id: int
-    user_id: int
-    game_id: int
+    schedule_id: UUID = Field(default_factory=uuid4)
+    user_id: UUID
+    game_id: UUID
     start_time: datetime
     end_time: datetime
     people_num: int = Field(gt=0)
 
 
 class TourUpdate(BaseModel):
-    user_id: Optional[int] = None
-    game_id: Optional[int] = None
+    user_id: Optional[UUID] = None
+    game_id: Optional[UUID] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     people_num: Optional[int] = Field(default=None, gt=0)
@@ -44,7 +45,7 @@ def create_tour_router(tour_service: TourService):
         return result
 
     @router.get("/{schedule_id}")
-    def get_tour(schedule_id: int):
+    def get_tour(schedule_id: UUID):
         result = tour_service.get_tour(schedule_id)
         if result is None:
             raise HTTPException(status_code=404, detail="Tour를 찾을 수 없습니다.")
@@ -55,7 +56,7 @@ def create_tour_router(tour_service: TourService):
         return tour_service.get_tours()
 
     @router.put("/{schedule_id}")
-    def update_tour(schedule_id: int, tour: TourUpdate):
+    def update_tour(schedule_id: UUID, tour: TourUpdate):
         try:
             result = tour_service.update_tour(
                 schedule_id=schedule_id,
@@ -69,7 +70,7 @@ def create_tour_router(tour_service: TourService):
         return result
 
     @router.delete("/{schedule_id}")
-    def delete_tour(schedule_id: int):
+    def delete_tour(schedule_id: UUID):
         result = tour_service.delete_tour(schedule_id)
         if result is None:
             raise HTTPException(status_code=404, detail="삭제할 Tour를 찾을 수 없습니다.")

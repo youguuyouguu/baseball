@@ -47,6 +47,9 @@ button { cursor: pointer; }
 }
 .empty-card { padding: 16px; background: var(--gray-50); }
 .game-list, .schedule-list, .place-list { display: grid; gap: 12px; }
+.month-navigation { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; }
+.month-navigation .button-ghost { min-height: 36px; padding: 6px 8px; }
+.month-navigation .button-ghost:disabled { color: var(--gray-300); cursor: not-allowed; }
 .game-card { width: 100%; padding: 16px; text-align: left; transition: border-color 120ms ease, background 120ms ease; }
 .game-card.is-selected { border: 2px solid var(--orange-500); background: var(--orange-50); }
 .game-card h3, .schedule-card h2, .place-card h2 { margin: 0; font-size: 16px; line-height: 24px; }

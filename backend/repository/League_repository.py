@@ -1,6 +1,7 @@
 # repository/League_repository.py
 
 from typing import Optional, List, Dict, Any
+from uuid import UUID
 
 from supabase import Client
 
@@ -30,17 +31,18 @@ class LeagueRepository:
 
     def create_League(
         self,
-        League_id: int,
+        League_id: UUID,
         game_date: str,
         game_time: str,
         game_name: str,
         stadium_name: str,
-        stadium_address: str
+        stadium_address: str,
+        external_game_id: Optional[str] = None,
     ) -> Dict[str, Any]:
 
         # Supabase에 저장할 데이터
         data = {
-            "League_id": League_id,
+            "League_id": str(League_id),
             "game_date": game_date,
             "game_time": game_time,
             "game_name": game_name,
@@ -63,14 +65,14 @@ class LeagueRepository:
 
     def get_League(
         self,
-        League_id: int
+        League_id: UUID
     ) -> Optional[Dict[str, Any]]:
 
         response = (
             self.supabase
             .table(self.TABLE_NAME)
             .select("*")
-            .eq("League_id", League_id)
+            .eq("League_id", str(League_id))
             .execute()
         )
 
@@ -94,13 +96,26 @@ class LeagueRepository:
 
         return response.data
 
+    def upsert_Leagues(self, leagues: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not leagues:
+            return []
+
+        response = (
+            self.supabase
+            .table(self.TABLE_NAME)
+            .upsert(leagues, on_conflict="League_id")
+            .execute()
+        )
+
+        return response.data
+
     # ==================================================
     # UPDATE
     # ==================================================
 
     def update_League(
         self,
-        League_id: int,
+        League_id: UUID,
         game_date: Optional[str] = None,
         game_time: Optional[str] = None,
         game_name: Optional[str] = None,
@@ -133,7 +148,7 @@ class LeagueRepository:
             self.supabase
             .table(self.TABLE_NAME)
             .update(update_data)
-            .eq("League_id", League_id)
+            .eq("League_id", str(League_id))
             .execute()
         )
 
@@ -148,14 +163,14 @@ class LeagueRepository:
 
     def delete_League(
         self,
-        League_id: int
+        League_id: UUID
     ) -> Optional[Dict[str, Any]]:
 
         response = (
             self.supabase
             .table(self.TABLE_NAME)
             .delete()
-            .eq("League_id", League_id)
+            .eq("League_id", str(League_id))
             .execute()
         )
 

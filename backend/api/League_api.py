@@ -1,9 +1,11 @@
 # api/League_api.py
 
+from datetime import date
 from typing import Optional
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from service.League_service import LeagueService
 
@@ -28,7 +30,8 @@ class LeagueCreateRequest(BaseModel):
     }
     """
 
-    League_id: int
+    League_id: UUID = Field(default_factory=uuid4)
+    external_game_id: Optional[str] = None
     game_date: str
     game_time: str
     game_name: str
@@ -66,6 +69,21 @@ def create_League_router(
         tags=["League"]
     )
 
+    @router.get("/upcoming")
+    def get_upcoming_Leagues():
+        result = League_service.get_upcoming_Leagues()
+        today = date.today()
+        season_end = date(today.year, 10, 31)
+
+        if not result and today <= season_end:
+            try:
+                League_service.sync_regular_season(today, season_end)
+                result = League_service.get_upcoming_Leagues()
+            except RuntimeError as error:
+                raise HTTPException(status_code=502, detail=str(error)) from error
+
+        return {"data": result}
+
     # ==================================================
     # CREATE
     # ==================================================
@@ -79,6 +97,7 @@ def create_League_router(
         try:
             result = League_service.create_League(
                 League_id=request.League_id,
+                external_game_id=request.external_game_id,
                 game_date=request.game_date,
                 game_time=request.game_time,
                 game_name=request.game_name,
@@ -102,7 +121,7 @@ def create_League_router(
     # ==================================================
 
     @router.get("/{League_id}")
-    def get_League(League_id: int):
+    def get_League(League_id: UUID):
         """
         특정 경기 일정을 조회한다.
         """
@@ -141,7 +160,7 @@ def create_League_router(
 
     @router.put("/{League_id}")
     def update_League(
-        League_id: int,
+        League_id: UUID,
         request: LeagueUpdateRequest
     ):
         """
@@ -180,7 +199,7 @@ def create_League_router(
     # ==================================================
 
     @router.delete("/{League_id}")
-    def delete_League(League_id: int):
+    def delete_League(League_id: UUID):
         """
         특정 경기 일정을 삭제한다.
         """

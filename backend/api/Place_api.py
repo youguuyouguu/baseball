@@ -1,14 +1,15 @@
 from typing import Optional
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from service.Place_service import PlaceService
 
 
 class PlaceCreate(BaseModel):
-    place_id: int
-    content_id: int
+    place_id: UUID = Field(default_factory=uuid4)
+    content_id: str
     place_type: str
     name: str
     address: str
@@ -17,7 +18,7 @@ class PlaceCreate(BaseModel):
 
 
 class PlaceUpdate(BaseModel):
-    content_id: Optional[int] = None
+    content_id: Optional[str] = None
     place_type: Optional[str] = None
     name: Optional[str] = None
     address: Optional[str] = None
@@ -44,7 +45,7 @@ def create_place_router(place_service: PlaceService):
         return result
 
     @router.get("/{place_id}")
-    def get_place(place_id: int):
+    def get_place(place_id: UUID):
         result = place_service.get_place(place_id)
         if result is None:
             raise HTTPException(status_code=404, detail="Place를 찾을 수 없습니다.")
@@ -55,7 +56,7 @@ def create_place_router(place_service: PlaceService):
         return place_service.get_places()
 
     @router.put("/{place_id}")
-    def update_place(place_id: int, place: PlaceUpdate):
+    def update_place(place_id: UUID, place: PlaceUpdate):
         try:
             result = place_service.update_place(
                 place_id=place_id,
@@ -68,7 +69,7 @@ def create_place_router(place_service: PlaceService):
         return result
 
     @router.delete("/{place_id}")
-    def delete_place(place_id: int):
+    def delete_place(place_id: UUID):
         result = place_service.delete_place(place_id)
         if result is None:
             raise HTTPException(status_code=404, detail="삭제할 Place를 찾을 수 없습니다.")

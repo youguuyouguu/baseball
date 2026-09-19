@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 
 from dotenv import load_dotenv
 from supabase import create_client
@@ -28,8 +29,9 @@ user_repository = UserRepository(supabase)
 # CREATE
 # --------------------------------------------------
 
+test_user_id = uuid4()
 user = user_repository.create_user(
-    user_id=344,
+    user_id=test_user_id,
     email="repository@test.com",
     nickname="Repository테스트"
 )
@@ -42,7 +44,7 @@ print(user)
 # READ
 # --------------------------------------------------
 
-user = user_repository.get_user(344)
+user = user_repository.get_user(test_user_id)
 
 print("\nREAD")
 print(user)
@@ -63,7 +65,7 @@ print(users)
 # --------------------------------------------------
 
 user = user_repository.update_user(
-    user_id=344,
+    user_id=test_user_id,
     nickname="Repository수정테스트"
 )
 
@@ -75,7 +77,7 @@ print(user)
 # DELETE
 # --------------------------------------------------
 
-user = user_repository.delete_user(344)
+user = user_repository.delete_user(test_user_id)
 
 print("\nDELETE")
 print(user)

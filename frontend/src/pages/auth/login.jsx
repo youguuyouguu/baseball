@@ -21,7 +21,7 @@ function Login() {
     setIsSubmitting(true);
     setMessage('');
     try {
-      const user = await getUser(Number(userId));
+      const user = await getUser(userId.trim());
       if (user.email !== email.trim() || user.nickname !== nickname.trim()) {
         throw new Error('로그인 정보가 일치하지 않습니다.');
       }
@@ -42,7 +42,7 @@ function Login() {
       </header>
       <form className="form-stack" onSubmit={handleLogin}>
         <label htmlFor="login-user-id">사용자 ID</label>
-        <input id="login-user-id" type="number" min="1" value={userId} onChange={(event) => setUserId(event.target.value)} required />
+        <input id="login-user-id" type="text" value={userId} onChange={(event) => setUserId(event.target.value)} required />
         <label htmlFor="login-email">이메일</label>
         <input id="login-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         <label htmlFor="login-nickname">닉네임</label>

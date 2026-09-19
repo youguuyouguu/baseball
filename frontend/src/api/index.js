@@ -39,3 +39,30 @@ export async function generateSchedule(requestBody) {
 
 	return response.json();
 }
+
+export async function createTour(tour) {
+	const response = await fetch(`${API_BASE_URL}/tours/`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(tour),
+	});
+
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({}));
+		throw new Error(error.detail || '일정 저장에 실패했습니다.');
+	}
+
+	return response.json();
+}
+
+export async function getUpcomingLeagues() {
+	const response = await fetch(`${API_BASE_URL}/leagues/upcoming`);
+
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({}));
+		throw new Error(error.detail || '경기 일정을 불러오지 못했습니다.');
+	}
+
+	const result = await response.json();
+	return result.data || [];
+}

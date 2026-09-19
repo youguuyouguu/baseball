@@ -1,4 +1,5 @@
 from typing import Optional, List, Dict, Any
+from uuid import UUID
 
 from repository.User_repository import UserRepository
 
@@ -25,7 +26,7 @@ class UserService:
 
     def create_user(
         self,
-        user_id: int,
+        user_id: UUID,
         email: str,
         nickname: str
     ) -> Dict[str, Any]:
@@ -60,7 +61,7 @@ class UserService:
 
     def get_user(
         self,
-        user_id: int
+        user_id: UUID,
     ) -> Optional[Dict[str, Any]]:
         """
         User_id를 이용하여 사용자 한 명을 조회한다.
@@ -83,7 +84,7 @@ class UserService:
 
     def update_user(
         self,
-        user_id: int,
+        user_id: UUID,
         email: Optional[str] = None,
         nickname: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
@@ -105,7 +106,7 @@ class UserService:
     # DELETE
     # =========================
 
-    def delete_user(self, user_id: int) -> Optional[Dict[str, Any]]:
+    def delete_user(self, user_id: UUID) -> Optional[Dict[str, Any]]:
         """
         User_id를 이용하여 사용자 한 명을 삭제한다.
         """

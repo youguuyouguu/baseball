@@ -4,7 +4,7 @@ import { createUser } from '../../api';
 
 function Signup() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ userId: '', email: '', nickname: '' });
+  const [form, setForm] = useState({ email: '', nickname: '' });
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,7 +21,6 @@ function Signup() {
 
     try {
       await createUser({
-        user_id: Number(form.userId),
         email: form.email.trim(),
         nickname: form.nickname.trim(),
       });
@@ -43,8 +42,6 @@ function Signup() {
       <form className="form-stack" onSubmit={handleSubmit}>
         <fieldset className="form-fieldset">
           <legend>계정 정보</legend>
-          <label className="form-label" htmlFor="signup-user-id">사용자 ID</label>
-          <input className="form-input" id="signup-user-id" name="userId" type="number" min="1" value={form.userId} onChange={updateField} required />
           <label className="form-label" htmlFor="signup-email">이메일</label>
           <input className="form-input" id="signup-email" name="email" type="email" value={form.email} onChange={updateField} required />
           <label className="form-label" htmlFor="signup-nickname">닉네임</label>

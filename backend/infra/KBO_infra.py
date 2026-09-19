@@ -1,10 +1,24 @@
-from datetime import date as date_type
+from datetime import date as date_type, timedelta
 from enum import Enum
 from typing import Optional
+from uuid import NAMESPACE_URL, uuid5
 
 import requests
 
 KBO_URL = "https://www.koreabaseball.com/ws/Main.asmx/GetKboGameList"
+
+STADIUM_ADDRESSES = {
+    "잠실": "서울특별시 송파구 올림픽로 25",
+    "문학": "인천광역시 미추홀구 매소홀로 618",
+    "사직": "부산광역시 동래구 사직로 45",
+    "수원": "경기도 수원시 장안구 경수대로 893",
+    "대구": "대구광역시 수성구 야구전설로 1",
+    "광주": "광주광역시 북구 서림로 10",
+    "대전": "대전광역시 중구 대종로 373",
+    "고척": "서울특별시 구로구 경인로 430",
+    "창원": "경상남도 창원시 마산회원구 삼호로 63",
+    "울산": "울산광역시 남구 문수로 44",
+}
 
 
 class GameStatus(str, Enum):
@@ -24,17 +38,29 @@ def _map_game_status(state_code: str) -> GameStatus:
 
 
 def _parse_game(raw: dict) -> dict:
-    """KBO 응답 필드 변환."""
+    """KBO 응답을 League 테이블 필드로 변환한다."""
+    stadium_name = raw.get("S_NM", "")
+    address = next(
+        (value for key, value in STADIUM_ADDRESSES.items() if key in stadium_name),
+        "",
+    )
+    external_game_id = str(raw["G_ID"])
     return {
-        "id": raw["G_ID"],
-        "date": raw["G_DT"],  
-        "start_time": raw["G_TM"],
-        "stadium": raw["S_NM"],
-        "home_team": raw["HOME_NM"],
-        "away_team": raw["AWAY_NM"],
+        "League_id": uuid5(NAMESPACE_URL, f"kbo:{external_game_id}"),
+        "external_game_id": external_game_id,
+        "game_date": _format_game_date(raw.get("G_DT", "")),
+        "game_time": raw.get("G_TM", ""),
+        "game_name": "KBO 정규시즌",
+        "stadium_name": stadium_name,
+        "stadium_address": address,
         "status": _map_game_status(raw.get("GAME_STATE_SC", "")).value,
-        # 필드 추가 가능
     }
+
+
+def _format_game_date(value: str) -> str:
+    if len(value) == 8 and value.isdigit():
+        return f"{value[:4]}-{value[4:6]}-{value[6:]}"
+    return value
 
 
 def get_kbo_games_for_date(target_date: date_type) -> list[dict]:
@@ -71,3 +97,15 @@ def get_kbo_games_for_date(target_date: date_type) -> list[dict]:
         return []
 
     return [_parse_game(g) for g in games]
+
+
+def get_regular_season_games(start_date: date_type, end_date: date_type) -> list[dict]:
+    """시작일부터 종료일까지 정규 시즌 경기 일정을 수집한다."""
+    games = []
+    current_date = start_date
+
+    while current_date <= end_date:
+        games.extend(get_kbo_games_for_date(current_date))
+        current_date += timedelta(days=1)
+
+    return games

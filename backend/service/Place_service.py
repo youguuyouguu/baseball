@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from repository.Place_repository import PlaceRepository
 
@@ -9,8 +10,8 @@ class PlaceService:
 
     def create_place(
         self,
-        place_id: int,
-        content_id: int,
+        place_id: UUID,
+        content_id: str,
         place_type: str,
         name: str,
         address: str,
@@ -30,7 +31,7 @@ class PlaceService:
             lng=lng,
         )
 
-    def get_place(self, place_id: int) -> Optional[Dict[str, Any]]:
+    def get_place(self, place_id: UUID) -> Optional[Dict[str, Any]]:
         return self.place_repository.get_place(place_id)
 
     def get_places(self) -> List[Dict[str, Any]]:
@@ -38,8 +39,8 @@ class PlaceService:
 
     def update_place(
         self,
-        place_id: int,
-        content_id: Optional[int] = None,
+        place_id: UUID,
+        content_id: Optional[str] = None,
         place_type: Optional[str] = None,
         name: Optional[str] = None,
         address: Optional[str] = None,
@@ -63,7 +64,7 @@ class PlaceService:
             lng=lng,
         )
 
-    def delete_place(self, place_id: int) -> Optional[Dict[str, Any]]:
+    def delete_place(self, place_id: UUID) -> Optional[Dict[str, Any]]:
         return self.place_repository.delete_place(place_id)
 
     @staticmethod

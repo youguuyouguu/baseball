@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from repository.Tour_repository import TourRepository
 
@@ -12,9 +13,9 @@ class TourService:
 
     def create_tour(
         self,
-        schedule_id: int,
-        user_id: int,
-        game_id: int,
+        schedule_id: UUID,
+        user_id: UUID,
+        game_id: UUID,
         start_time: datetime,
         end_time: datetime,
         people_num: int,
@@ -30,7 +31,7 @@ class TourService:
             people_num=people_num,
         )
 
-    def get_tour(self, schedule_id: int) -> Optional[Dict[str, Any]]:
+    def get_tour(self, schedule_id: UUID) -> Optional[Dict[str, Any]]:
         return self.tour_repository.get_tour(schedule_id)
 
     def get_tours(self) -> List[Dict[str, Any]]:
@@ -38,9 +39,9 @@ class TourService:
 
     def update_tour(
         self,
-        schedule_id: int,
-        user_id: Optional[int] = None,
-        game_id: Optional[int] = None,
+        schedule_id: UUID,
+        user_id: Optional[UUID] = None,
+        game_id: Optional[UUID] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         people_num: Optional[int] = None,
@@ -58,7 +59,7 @@ class TourService:
             people_num=people_num,
         )
 
-    def delete_tour(self, schedule_id: int) -> Optional[Dict[str, Any]]:
+    def delete_tour(self, schedule_id: UUID) -> Optional[Dict[str, Any]]:
         return self.tour_repository.delete_tour(schedule_id)
 
     @staticmethod

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
 const initialForm = {
@@ -14,6 +15,7 @@ const initialForm = {
 
 function AddSchedule() {
 	const navigate = useNavigate();
+	const { state } = useLocation();
 	const [form, setForm] = useState(initialForm);
 	const [message, setMessage] = useState('');
 
@@ -39,7 +41,7 @@ function AddSchedule() {
 			return;
 		}
 
-		navigate('/schedule/add/tourist', { state: { schedule: form } });
+		navigate('/schedule/add/tourist', { state: { schedule: form, game: state?.game || null } });
 	};
 
 	return (
@@ -47,6 +49,7 @@ function AddSchedule() {
 			<header className="screen-header">
 				<h1 className="screen-title">일정 생성 화면</h1>
 				<h2 className="section-title">원정 일정 만들기</h2>
+				{state?.game && <p className="muted">{state.game.game_date} {state.game.game_time} · {state.game.stadium_name}</p>}
 			</header>
 
 			<form className="form-stack" onSubmit={handleSubmit}>

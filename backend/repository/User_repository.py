@@ -1,4 +1,5 @@
 from typing import Optional, List, Dict, Any
+from uuid import UUID
 
 from supabase import Client
 
@@ -35,7 +36,7 @@ class UserRepository:
 
     def create_user(
         self,
-        user_id: int,
+        user_id: UUID,
         email: str,
         nickname: str
     ) -> Dict[str, Any]:
@@ -52,7 +53,7 @@ class UserRepository:
         """
 
         data = {
-            "User_id": user_id,
+            "User_id": str(user_id),
             "email": email,
             "nickname": nickname
         }
@@ -70,7 +71,7 @@ class UserRepository:
     # READ
     # --------------------------------------------------
 
-    def get_user(self, user_id: int) -> Optional[Dict[str, Any]]:
+    def get_user(self, user_id: UUID) -> Optional[Dict[str, Any]]:
         """
         User_id를 이용해 특정 사용자를 조회한다.
 
@@ -86,7 +87,7 @@ class UserRepository:
             self.supabase
             .table(self.TABLE_NAME)
             .select("*")
-            .eq("User_id", user_id)
+                .eq("User_id", str(user_id))
             .execute()
         )
 
@@ -122,7 +123,7 @@ class UserRepository:
 
     def update_user(
         self,
-        user_id: int,
+        user_id: UUID,
         email: Optional[str] = None,
         nickname: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
@@ -156,7 +157,7 @@ class UserRepository:
             self.supabase
             .table(self.TABLE_NAME)
             .update(update_data)
-            .eq("User_id", user_id)
+            .eq("User_id", str(user_id))
             .execute()
         )
 
@@ -169,7 +170,7 @@ class UserRepository:
     # DELETE
     # --------------------------------------------------
 
-    def delete_user(self, user_id: int) -> Optional[Dict[str, Any]]:
+    def delete_user(self, user_id: UUID) -> Optional[Dict[str, Any]]:
         """
         특정 사용자를 삭제한다.
 
@@ -184,7 +185,7 @@ class UserRepository:
             self.supabase
             .table(self.TABLE_NAME)
             .delete()
-            .eq("User_id", user_id)
+            .eq("User_id", str(user_id))
             .execute()
         )
 

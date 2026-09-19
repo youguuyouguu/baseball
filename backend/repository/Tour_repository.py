@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from supabase import Client
 
@@ -12,17 +13,17 @@ class TourRepository:
 
     def create_tour(
         self,
-        schedule_id: int,
-        user_id: int,
-        game_id: int,
+        schedule_id: UUID,
+        user_id: UUID,
+        game_id: UUID,
         start_time: datetime,
         end_time: datetime,
         people_num: int,
     ) -> Dict[str, Any]:
         data = {
-            "schedule_id": schedule_id,
-            "user_id": user_id,
-            "game_id": game_id,
+            "schedule_id": str(schedule_id),
+            "user_id": str(user_id),
+            "game_id": str(game_id),
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat(),
             "people_num": people_num,
@@ -31,12 +32,12 @@ class TourRepository:
         response = self.supabase.table(self.TABLE_NAME).insert(data).execute()
         return response.data[0]
 
-    def get_tour(self, schedule_id: int) -> Optional[Dict[str, Any]]:
+    def get_tour(self, schedule_id: UUID) -> Optional[Dict[str, Any]]:
         response = (
             self.supabase
             .table(self.TABLE_NAME)
             .select("*")
-            .eq("schedule_id", schedule_id)
+            .eq("schedule_id", str(schedule_id))
             .execute()
         )
 
@@ -48,9 +49,9 @@ class TourRepository:
 
     def update_tour(
         self,
-        schedule_id: int,
-        user_id: Optional[int] = None,
-        game_id: Optional[int] = None,
+        schedule_id: UUID,
+        user_id: Optional[UUID] = None,
+        game_id: Optional[UUID] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         people_num: Optional[int] = None,
@@ -58,9 +59,9 @@ class TourRepository:
         update_data: Dict[str, Any] = {}
 
         if user_id is not None:
-            update_data["user_id"] = user_id
+            update_data["user_id"] = str(user_id)
         if game_id is not None:
-            update_data["game_id"] = game_id
+            update_data["game_id"] = str(game_id)
         if start_time is not None:
             update_data["start_time"] = start_time.isoformat()
         if end_time is not None:
@@ -75,18 +76,18 @@ class TourRepository:
             self.supabase
             .table(self.TABLE_NAME)
             .update(update_data)
-            .eq("schedule_id", schedule_id)
+            .eq("schedule_id", str(schedule_id))
             .execute()
         )
 
         return response.data[0] if response.data else None
 
-    def delete_tour(self, schedule_id: int) -> Optional[Dict[str, Any]]:
+    def delete_tour(self, schedule_id: UUID) -> Optional[Dict[str, Any]]:
         response = (
             self.supabase
             .table(self.TABLE_NAME)
             .delete()
-            .eq("schedule_id", schedule_id)
+            .eq("schedule_id", str(schedule_id))
             .execute()
         )
 

@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from supabase import Client
 
@@ -11,8 +12,8 @@ class PlaceRepository:
 
     def create_place(
         self,
-        place_id: int,
-        content_id: int,
+        place_id: UUID,
+        content_id: str,
         place_type: str,
         name: str,
         address: str,
@@ -20,7 +21,7 @@ class PlaceRepository:
         lng: float,
     ) -> Dict[str, Any]:
         data = {
-            "place_id": place_id,
+            "place_id": str(place_id),
             "content_id": content_id,
             "place_type": place_type,
             "name": name,
@@ -31,8 +32,8 @@ class PlaceRepository:
         response = self.supabase.table(self.TABLE_NAME).insert(data).execute()
         return response.data[0]
 
-    def get_place(self, place_id: int) -> Optional[Dict[str, Any]]:
-        response = self.supabase.table(self.TABLE_NAME).select("*").eq("place_id", place_id).execute()
+    def get_place(self, place_id: UUID) -> Optional[Dict[str, Any]]:
+        response = self.supabase.table(self.TABLE_NAME).select("*").eq("place_id", str(place_id)).execute()
         return response.data[0] if response.data else None
 
     def get_places(self) -> List[Dict[str, Any]]:
@@ -41,8 +42,8 @@ class PlaceRepository:
 
     def update_place(
         self,
-        place_id: int,
-        content_id: Optional[int] = None,
+        place_id: UUID,
+        content_id: Optional[str] = None,
         place_type: Optional[str] = None,
         name: Optional[str] = None,
         address: Optional[str] = None,
@@ -65,9 +66,9 @@ class PlaceRepository:
         if not update_data:
             return None
 
-        response = self.supabase.table(self.TABLE_NAME).update(update_data).eq("place_id", place_id).execute()
+        response = self.supabase.table(self.TABLE_NAME).update(update_data).eq("place_id", str(place_id)).execute()
         return response.data[0] if response.data else None
 
-    def delete_place(self, place_id: int) -> Optional[Dict[str, Any]]:
-        response = self.supabase.table(self.TABLE_NAME).delete().eq("place_id", place_id).execute()
+    def delete_place(self, place_id: UUID) -> Optional[Dict[str, Any]]:
+        response = self.supabase.table(self.TABLE_NAME).delete().eq("place_id", str(place_id)).execute()
         return response.data[0] if response.data else None

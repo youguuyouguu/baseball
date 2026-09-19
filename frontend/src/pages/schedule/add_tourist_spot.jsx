@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { generateSchedule } from '../../api';
+import { createTour, generateSchedule } from '../../api';
 
 const places = [
   { id: 'jagalchi', name: '부산 자갈치시장', category: '관광', tags: ['시장', '먹거리'], distance: '경기장까지 차량 10분', visit_minutes: 60, opening_time: '10:00:00', closing_time: '22:00:00', address: '부산광역시 중구' },
@@ -25,15 +25,19 @@ function buildTravelTimes(schedule, selectedPlaces) {
   ]));
 }
 
-function buildScheduleRequest(schedule, selectedPlaces) {
+function buildScheduleRequest(schedule, game, selectedPlaces) {
   const location = (id, name, address) => ({ id, name, address });
   const date = schedule.startDate;
+  const gameDate = game?.game_date || date;
+  const gameTime = game?.game_time?.slice(0, 5) || '18:30';
+  const stadiumName = game?.stadium_name || DEFAULT_STADIUM.name;
+  const stadiumAddress = game?.stadium_address || DEFAULT_STADIUM.address;
 
   return {
     participant_count: Number(schedule.people),
     game: {
-      stadium: DEFAULT_STADIUM,
-      start_time: toDateTime(date, '18:30'), // 실제 경기장, 경기 시간으로 변경
+      stadium: { id: game?.League_id || DEFAULT_STADIUM.id, name: stadiumName, address: stadiumAddress },
+      start_time: toDateTime(gameDate, gameTime),
     },
     start_point: {
       location: location('departure', schedule.departure, schedule.address || schedule.departure),
@@ -102,8 +106,25 @@ function AddTouristSpot() {
     setIsSubmitting(true);
     setMessage('일정을 계산하고 있습니다.');
     try {
-      const result = await generateSchedule(buildScheduleRequest(state.schedule, addedPlaces));
-      navigate('/schedule/all', { state: { schedule: state.schedule, places: addedPlaces, generatedSchedule: result } });
+      if (!state.game?.League_id) {
+        throw new Error('관람할 경기를 먼저 선택해 주세요.');
+      }
+
+      const result = await generateSchedule(buildScheduleRequest(state.schedule, state.game, addedPlaces));
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      if (!user?.User_id && !user?.user_id) {
+        throw new Error('로그인한 사용자 정보를 찾을 수 없습니다.');
+      }
+
+      const tour = await createTour({
+        user_id: user.User_id || user.user_id,
+        game_id: state.game.League_id,
+        start_time: toDateTime(state.schedule.startDate, state.schedule.arrivalTime),
+        end_time: toDateTime(state.schedule.endDate, state.schedule.returnTime),
+        people_num: Number(state.schedule.people),
+      });
+
+      navigate('/schedule/all', { state: { schedule: state.schedule, game: state.game, places: addedPlaces, generatedSchedule: result, tour } });
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -116,7 +137,7 @@ function AddTouristSpot() {
       <header className="screen-header">
         <h1 className="screen-title">관광지 추가 화면</h1>
         <p className="muted">일정에 추가할 장소를 검색하고 선택해 주세요.</p>
-        {state?.schedule && <p className="muted">선택한 경기: {state.schedule.match}</p>}
+        {state?.game && <p className="muted">선택한 경기: {state.game.game_name} · {state.game.stadium_name}</p>}
       </header>
 
       <label className="form-label" htmlFor="place-search">장소 검색</label>

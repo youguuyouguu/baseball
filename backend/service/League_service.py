@@ -1,8 +1,9 @@
-# service/League_service.py
-
+from datetime import date, datetime, time
 from typing import Optional, List, Dict, Any
+from uuid import UUID
 
 from repository.League_repository import LeagueRepository
+from infra.KBO_infra import get_regular_season_games
 
 
 class LeagueService:
@@ -31,12 +32,13 @@ class LeagueService:
 
     def create_League(
         self,
-        League_id: int,
+        League_id: UUID,
         game_date: str,
         game_time: str,
         game_name: str,
         stadium_name: str,
-        stadium_address: str
+        stadium_address: str,
+        external_game_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         새로운 경기 일정을 생성한다.
@@ -67,6 +69,7 @@ class LeagueService:
         # Repository를 통해 DB에 저장
         return self.League_repository.create_League(
             League_id=League_id,
+            external_game_id=external_game_id,
             game_date=game_date,
             game_time=game_time,
             game_name=game_name,
@@ -80,7 +83,7 @@ class LeagueService:
 
     def get_League(
         self,
-        League_id: int
+        League_id: UUID
     ) -> Optional[Dict[str, Any]]:
         """
         특정 경기 일정을 조회한다.
@@ -99,13 +102,50 @@ class LeagueService:
 
         return self.League_repository.get_Leagues()
 
+    def sync_regular_season(self, start_date: date, end_date: date) -> List[Dict[str, Any]]:
+        games = get_regular_season_games(start_date, end_date)
+        return self.League_repository.upsert_Leagues(
+            [
+                {
+                    "League_id": str(game["League_id"]),
+                    "game_date": game["game_date"],
+                    "game_time": game["game_time"],
+                    "game_name": game["game_name"],
+                    "stadium_name": game["stadium_name"],
+                    "stadium_address": game["stadium_address"],
+                }
+                for game in games
+            ]
+        )
+
+    def get_upcoming_Leagues(self, now: Optional[datetime] = None) -> List[Dict[str, Any]]:
+        current_time = now or datetime.now()
+        upcoming = []
+
+        for league in self.League_repository.get_Leagues():
+            try:
+                game_date = date.fromisoformat(league["game_date"])
+                game_time = time.fromisoformat(league["game_time"][:5])
+            except (KeyError, TypeError, ValueError):
+                continue
+
+            if game_date > current_time.date() or (
+                game_date == current_time.date() and game_time >= current_time.time()
+            ):
+                upcoming.append(league)
+
+        return sorted(
+            upcoming,
+            key=lambda league: (league["game_date"], league["game_time"], league["League_id"]),
+        )
+
     # ==================================================
     # UPDATE
     # ==================================================
 
     def update_League(
         self,
-        League_id: int,
+        League_id: UUID,
         game_date: Optional[str] = None,
         game_time: Optional[str] = None,
         game_name: Optional[str] = None,
@@ -144,7 +184,7 @@ class LeagueService:
 
     def delete_League(
         self,
-        League_id: int
+        League_id: UUID
     ) -> Optional[Dict[str, Any]]:
         """
         특정 경기 일정을 삭제한다.
