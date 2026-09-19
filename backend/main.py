@@ -9,12 +9,15 @@ from api.kbo_api import create_kbo_router
 from api.schedule_api import create_schedule_router
 from api.tour_api import create_tour_router
 from api.user_api import create_user_router
+from api.Detail_api import create_detail_router
 from repository.User_repository import UserRepository
 from repository.Tour_repository import TourRepository
+from repository.Detail_repository import DetailRepository
 from service.KBO_service import KBOService
 from service.Schedule_service import ScheduleService
 from service.Tour_service import TourService
 from service.User_service import UserService
+from service.Detail_service import DetailService
 
 
 app = FastAPI()
@@ -35,8 +38,10 @@ supabase = create_client(
 
 user_repository = UserRepository(supabase)
 tour_repository = TourRepository(supabase)
+detail_repository = DetailRepository(supabase)
 user_service = UserService(user_repository)
 tour_service = TourService(tour_repository)
+detail_service = DetailService(detail_repository)
 kbo_service = KBOService()
 schedule_service = ScheduleService()
 
@@ -44,3 +49,4 @@ app.include_router(create_user_router(supabase))
 app.include_router(create_kbo_router(kbo_service))
 app.include_router(create_schedule_router(schedule_service))
 app.include_router(create_tour_router(tour_service))
+app.include_router(create_detail_router(detail_service))
