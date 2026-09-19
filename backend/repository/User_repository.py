@@ -192,3 +192,4 @@ class UserRepository:
             return None
 
         return response.data[0]
+
