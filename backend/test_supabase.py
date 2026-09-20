@@ -1,5 +1,4 @@
 import os
-from uuid import UUID
 
 from dotenv import load_dotenv
 from supabase import create_client
@@ -19,11 +18,11 @@ supabase = create_client(
 )
 
 
-# 테스트 UUID를 지정해 삭제한다.
-test_user_id = UUID(os.environ["TEST_USER_ID"])
+# 테스트 bigint ID를 지정해 삭제한다.
+test_user_id = int(os.environ["TEST_USER_ID"])
 response = supabase.table("User") \
     .delete() \
-    .eq("User_id", str(test_user_id)) \
+    .eq("User_id", test_user_id) \
     .execute()
 
 

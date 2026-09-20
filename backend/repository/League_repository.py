@@ -1,7 +1,6 @@
 # repository/League_repository.py
 
 from typing import Optional, List, Dict, Any
-from uuid import UUID
 
 from supabase import Client
 
@@ -31,24 +30,25 @@ class LeagueRepository:
 
     def create_League(
         self,
-        League_id: UUID,
         game_date: str,
         game_time: str,
         game_name: str,
         stadium_name: str,
         stadium_address: str,
+        League_id: Optional[int] = None,
         external_game_id: Optional[str] = None,
     ) -> Dict[str, Any]:
 
         # Supabase에 저장할 데이터
         data = {
-            "League_id": str(League_id),
             "game_date": game_date,
             "game_time": game_time,
             "game_name": game_name,
             "stadium_name": stadium_name,
             "stadium_address": stadium_address
         }
+        if League_id is not None:
+            data["League_id"] = League_id
 
         response = (
             self.supabase
@@ -65,14 +65,14 @@ class LeagueRepository:
 
     def get_League(
         self,
-        League_id: UUID
+        League_id: int
     ) -> Optional[Dict[str, Any]]:
 
         response = (
             self.supabase
             .table(self.TABLE_NAME)
             .select("*")
-            .eq("League_id", str(League_id))
+            .eq("League_id", League_id)
             .execute()
         )
 
@@ -115,7 +115,7 @@ class LeagueRepository:
 
     def update_League(
         self,
-        League_id: UUID,
+        League_id: int,
         game_date: Optional[str] = None,
         game_time: Optional[str] = None,
         game_name: Optional[str] = None,
@@ -148,7 +148,7 @@ class LeagueRepository:
             self.supabase
             .table(self.TABLE_NAME)
             .update(update_data)
-            .eq("League_id", str(League_id))
+            .eq("League_id", League_id)
             .execute()
         )
 
@@ -163,14 +163,14 @@ class LeagueRepository:
 
     def delete_League(
         self,
-        League_id: UUID
+        League_id: int
     ) -> Optional[Dict[str, Any]]:
 
         response = (
             self.supabase
             .table(self.TABLE_NAME)
             .delete()
-            .eq("League_id", str(League_id))
+            .eq("League_id", League_id)
             .execute()
         )
 

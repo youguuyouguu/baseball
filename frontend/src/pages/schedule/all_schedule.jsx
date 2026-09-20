@@ -31,6 +31,11 @@ function AllSchedule() {
           </div>
         </section>
       )}
+      {state?.generatedSchedule && (
+        <button className="button-secondary button-full" type="button" onClick={() => navigate('/schedule/realtime', { state })}>
+          실시간 일정 보기
+        </button>
+      )}
       <button className="button-primary button-full" type="button" onClick={() => navigate('/schedule/add')}>
         일정 추가하기
       </button>

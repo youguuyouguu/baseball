@@ -1,5 +1,4 @@
 import os
-from uuid import uuid4
 
 from dotenv import load_dotenv
 from supabase import create_client
@@ -29,7 +28,7 @@ user_repository = UserRepository(supabase)
 # CREATE
 # --------------------------------------------------
 
-test_user_id = uuid4()
+test_user_id = 999999
 user = user_repository.create_user(
     user_id=test_user_id,
     email="repository@test.com",

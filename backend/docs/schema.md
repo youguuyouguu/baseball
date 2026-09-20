@@ -34,7 +34,7 @@
 사용자의 기본 정보를 저장하는 테이블이다.
 
 2.1 User (사용자)
-- user_id (PK): UUID 형식의 사용자 식별자
+- user_id (PK): bigint 형식의 사용자 식별자
 - email: 이메일
 - nickname: 닉네임
 
@@ -48,7 +48,7 @@
 ---
 
 2.2 League (경기 일정)
-- league_id (PK): UUID 형식의 경기 식별자
+- league_id (PK): bigint 형식의 경기 식별자
 - game_date: 경기 날짜
 - game_time: 시작 시간
 - stadium_name: 경기장 이름
@@ -62,17 +62,17 @@
 ---
 
 2.3 Tour (전체 일정)
-- schedule_id (PK): UUID 형식의 일정 식별자
-- user_id (FK): UUID 형식의 사용자 (User)
-- game_id (FK): UUID 형식의 경기 (League)
-- start_time: 일정 시작 시간
-- end_time: 일정 종료 시간
+- schedule_id (PK): bigint 형식의 일정 식별자
+- User_id (FK): bigint 형식의 사용자 (User)
+- League_id (FK): bigint 형식의 경기 (League)
+- starting_time: 일정 시작 시간 (`time`)
+- end_time: 일정 종료 시간 (`time`)
 - people_num: 참여 인원
 
 ### 외래 키
 
-* `user_id` → `User.User_id`
-* `game_id` → `league.league_id`
+* `User_id` → `User.User_id`
+* `League_id` → `League.League_id`
 
 ### 역할
 
@@ -87,9 +87,9 @@
 ---
 
 2.4 ScheduleDetail (세부 일정)
-- detail_id (PK): UUID 형식의 세부 일정 식별자
-- schedule_id (FK): UUID 형식의 전체 일정 (Tour)
-- place_id (FK): UUID 형식의 장소 (Place, Nullable)
+- detail_id (PK): bigint 형식의 세부 일정 식별자
+- schedule_id (FK): bigint 형식의 전체 일정 (Tour)
+- place_id (FK): bigint 형식의 장소 (Place, Nullable)
 - custom_name: 직접 입력한 장소명 (Nullable)
 - start_at: 방문 시작 시간
 - end_at: 방문 종료 시간
@@ -121,7 +121,7 @@
 ---
 
 2.5 Place (장소)
-- place_id (PK): UUID 형식의 장소 식별자
+- place_id (PK): bigint 형식의 장소 식별자
 - content_id: 외부 API의 문자열 식별자
 - place_type: 장소 타입
 - name: 장소 이름
@@ -139,9 +139,9 @@
 ---
 
 2.6 Review (리뷰)
-- review_id (PK): UUID 형식의 리뷰 식별자
-- user_id (FK): UUID 형식의 작성자 (User)
-- place_id (FK): UUID 형식의 장소 (Place)
+- review_id (PK): bigint 형식의 리뷰 식별자
+- user_id (FK): bigint 형식의 작성자 (User)
+- place_id (FK): bigint 형식의 장소 (Place)
 - content: 내용
 
 ### 외래 키
@@ -257,11 +257,11 @@ review
 외래 키 관계는 다음과 같다.
 
 ```text
-Tour.user_id
+Tour.User_id
     → User.User_id
 
-Tour.game_id
-    → league.league_id
+Tour.League_id
+    → League.League_id
 
 schedule_detail.schedule_id
     → Tour.schedule_id

@@ -1,29 +1,28 @@
-from datetime import datetime
+from datetime import time
 from typing import Optional
-from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from service.Detail_service import DetailService
 
 
 class DetailCreate(BaseModel):
-    detail_id: UUID = Field(default_factory=uuid4)
-    schedule_id: UUID
-    place_id: Optional[UUID] = None
+    detail_id: Optional[int] = None
+    schedule_id: int
+    place_id: Optional[int] = None
     custom_name: Optional[str] = None
-    start_at: datetime
-    end_at: datetime
+    start_at: time
+    end_at: time
     state: str
 
 
 class DetailUpdate(BaseModel):
-    schedule_id: Optional[UUID] = None
-    place_id: Optional[UUID] = None
+    schedule_id: Optional[int] = None
+    place_id: Optional[int] = None
     custom_name: Optional[str] = None
-    start_at: Optional[datetime] = None
-    end_at: Optional[datetime] = None
+    start_at: Optional[time] = None
+    end_at: Optional[time] = None
     state: Optional[str] = None
 
 
@@ -46,20 +45,20 @@ def create_detail_router(detail_service: DetailService):
         return result
 
     @router.get("/{detail_id}")
-    def get_detail(detail_id: UUID):
+    def get_detail(detail_id: int):
         result = detail_service.get_detail(detail_id)
         if result is None:
             raise HTTPException(status_code=404, detail="ScheduleDetail을 찾을 수 없습니다.")
         return result
 
     @router.get("/")
-    def get_details(schedule_id: Optional[UUID] = None):
+    def get_details(schedule_id: Optional[int] = None):
         if schedule_id is not None:
             return detail_service.get_details_by_schedule(schedule_id)
         return detail_service.get_details()
 
     @router.put("/{detail_id}")
-    def update_detail(detail_id: UUID, detail: DetailUpdate):
+    def update_detail(detail_id: int, detail: DetailUpdate):
         try:
             result = detail_service.update_detail(detail_id=detail_id, **request_data(detail, exclude_unset=True))
         except ValueError as error:
@@ -69,7 +68,7 @@ def create_detail_router(detail_service: DetailService):
         return result
 
     @router.delete("/{detail_id}")
-    def delete_detail(detail_id: UUID):
+    def delete_detail(detail_id: int):
         result = detail_service.delete_detail(detail_id)
         if result is None:
             raise HTTPException(status_code=404, detail="삭제할 ScheduleDetail을 찾을 수 없습니다.")

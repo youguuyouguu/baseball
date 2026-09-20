@@ -1,6 +1,5 @@
 from datetime import date, datetime, time
 from typing import Optional, List, Dict, Any
-from uuid import UUID
 
 from repository.League_repository import LeagueRepository
 from infra.KBO_infra import get_regular_season_games
@@ -32,12 +31,12 @@ class LeagueService:
 
     def create_League(
         self,
-        League_id: UUID,
         game_date: str,
         game_time: str,
         game_name: str,
         stadium_name: str,
         stadium_address: str,
+        League_id: Optional[int] = None,
         external_game_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
@@ -61,7 +60,7 @@ class LeagueService:
             raise ValueError("경기장 주소는 필수입니다.")
 
         # 같은 League_id를 가진 경기가 이미 존재하는지 확인
-        existing_League = self.League_repository.get_League(League_id)
+        existing_League = self.League_repository.get_League(League_id) if League_id is not None else None
 
         if existing_League is not None:
             raise ValueError("이미 존재하는 League_id입니다.")
@@ -83,7 +82,7 @@ class LeagueService:
 
     def get_League(
         self,
-        League_id: UUID
+        League_id: int
     ) -> Optional[Dict[str, Any]]:
         """
         특정 경기 일정을 조회한다.
@@ -107,7 +106,7 @@ class LeagueService:
         return self.League_repository.upsert_Leagues(
             [
                 {
-                    "League_id": str(game["League_id"]),
+                    "League_id": game["League_id"],
                     "game_date": game["game_date"],
                     "game_time": game["game_time"],
                     "game_name": game["game_name"],
@@ -145,7 +144,7 @@ class LeagueService:
 
     def update_League(
         self,
-        League_id: UUID,
+        League_id: int,
         game_date: Optional[str] = None,
         game_time: Optional[str] = None,
         game_name: Optional[str] = None,
@@ -184,7 +183,7 @@ class LeagueService:
 
     def delete_League(
         self,
-        League_id: UUID
+        League_id: int
     ) -> Optional[Dict[str, Any]]:
         """
         특정 경기 일정을 삭제한다.

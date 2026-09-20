@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { createTour, generateSchedule } from '../../api';
+import { createScheduleDetail, createTour, generateSchedule } from '../../api';
 import { loadKakao, searchKakaoPlaces, STADIUM } from '../../lib/kakao';
 
 const DEFAULT_STADIUM = { id: 'stadium', name: '사직야구장', address: '부산광역시 동래구' };
@@ -9,6 +9,21 @@ const categories = ['전체', '관광', '식당', '숙소', '카페'];
 
 function toDateTime(date, time) {
   return `${date}T${time}:00`;
+}
+
+function toDbTime(time) {
+  const timePart = String(time).split('T').pop().slice(0, 8);
+  return timePart.length === 5 ? `${timePart}:00` : timePart;
+}
+
+function createDetailPayload(scheduleId, item) {
+  return {
+    schedule_id: scheduleId,
+    custom_name: item.name || item.location?.name || item.type,
+    start_at: toDbTime(item.arrival_time),
+    end_at: toDbTime(item.departure_time || item.arrival_time),
+    state: '대기',
+  };
 }
 
 function buildTravelTimes(schedule, game, selectedPlaces) {
@@ -31,7 +46,7 @@ function buildScheduleRequest(schedule, game, selectedPlaces) {
   return {
     participant_count: Number(schedule.people),
     game: {
-      stadium: { id: game?.League_id || DEFAULT_STADIUM.id, name: stadiumName, address: stadiumAddress },
+      stadium: { id: String(game?.League_id) || DEFAULT_STADIUM.id, name: stadiumName, address: stadiumAddress },
       start_time: toDateTime(gameDate, gameTime),
     },
     start_point: {
@@ -160,14 +175,23 @@ function AddTouristSpot() {
       }
 
       const tour = await createTour({
-        user_id: user.User_id || user.user_id,
-        game_id: state.game.League_id,
-        start_time: toDateTime(state.schedule.startDate, state.schedule.arrivalTime),
-        end_time: toDateTime(state.schedule.endDate, state.schedule.returnTime),
+        User_id: user.User_id,
+        League_id: state.game.League_id,
+        starting_time: toDbTime(state.schedule.arrivalTime),
+        end_time: toDbTime(state.schedule.returnTime),
         people_num: Number(state.schedule.people),
       });
 
-      navigate('/schedule/all', { state: { schedule: state.schedule, game: state.game, places: addedPlaces, generatedSchedule: result, tour } });
+      if (tour.Schdule_id == null) {
+        console.log('Tour 생성 후 Schedule_id:', tour);
+        throw new Error('생성된 일정의 schedule_id를 받지 못했습니다.');
+      }
+      const detailItems = result.items.filter((item) => item.type === 'place');
+      const details = await Promise.all(
+        detailItems.map((item) => createScheduleDetail(createDetailPayload(tour.Schdule_id, item))),
+      );
+
+      navigate('/schedule/all', { state: { schedule: state.schedule, game: state.game, places: addedPlaces, generatedSchedule: result, tour, details } });
     } catch (error) {
       setMessage(error.message);
     } finally {

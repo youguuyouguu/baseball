@@ -42,7 +42,7 @@ function Login() {
       </header>
       <form className="form-stack" onSubmit={handleLogin}>
         <label htmlFor="login-user-id">사용자 ID</label>
-        <input id="login-user-id" type="text" value={userId} onChange={(event) => setUserId(event.target.value)} required />
+        <input id="login-user-id" type="number" min="1" value={userId} onChange={(event) => setUserId(event.target.value)} required />
         <label htmlFor="login-email">이메일</label>
         <input id="login-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         <label htmlFor="login-nickname">닉네임</label>

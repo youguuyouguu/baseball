@@ -55,6 +55,41 @@ export async function createTour(tour) {
 	return response.json();
 }
 
+export async function createScheduleDetail(detail) {
+	const response = await fetch(`${API_BASE_URL}/schedule-details/`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(detail),
+	});
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({}));
+		throw new Error(error.detail || '세부 일정 저장에 실패했습니다.');
+	}
+	return response.json();
+}
+
+export async function updateScheduleDetail(detailId, detail) {
+	const response = await fetch(`${API_BASE_URL}/schedule-details/${detailId}`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(detail),
+	});
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({}));
+		throw new Error(error.detail || '세부 일정 수정에 실패했습니다.');
+	}
+	return response.json();
+}
+
+export async function deleteScheduleDetail(detailId) {
+	const response = await fetch(`${API_BASE_URL}/schedule-details/${detailId}`, { method: 'DELETE' });
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({}));
+		throw new Error(error.detail || '세부 일정 삭제에 실패했습니다.');
+	}
+	return response.json();
+}
+
 export async function getUpcomingLeagues() {
 	const response = await fetch(`${API_BASE_URL}/leagues/upcoming`);
 

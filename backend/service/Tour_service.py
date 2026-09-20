@@ -1,6 +1,5 @@
-from datetime import datetime
+from datetime import time
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from repository.Tour_repository import TourRepository
 
@@ -13,25 +12,25 @@ class TourService:
 
     def create_tour(
         self,
-        schedule_id: UUID,
-        user_id: UUID,
-        game_id: UUID,
-        start_time: datetime,
-        end_time: datetime,
+        schedule_id: Optional[int],
+        User_id: int,
+        League_id: int,
+        starting_time: time,
+        end_time: time,
         people_num: int,
     ) -> Dict[str, Any]:
-        self._validate_times(start_time, end_time)
+        self._validate_times(starting_time, end_time)
         self._validate_people(people_num)
         return self.tour_repository.create_tour(
             schedule_id=schedule_id,
-            user_id=user_id,
-            game_id=game_id,
-            start_time=start_time,
+            User_id=User_id,
+            League_id=League_id,
+            starting_time=starting_time,
             end_time=end_time,
             people_num=people_num,
         )
 
-    def get_tour(self, schedule_id: UUID) -> Optional[Dict[str, Any]]:
+    def get_tour(self, schedule_id: int) -> Optional[Dict[str, Any]]:
         return self.tour_repository.get_tour(schedule_id)
 
     def get_tours(self) -> List[Dict[str, Any]]:
@@ -39,31 +38,31 @@ class TourService:
 
     def update_tour(
         self,
-        schedule_id: UUID,
-        user_id: Optional[UUID] = None,
-        game_id: Optional[UUID] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        schedule_id: int,
+        User_id: Optional[int] = None,
+        League_id: Optional[int] = None,
+        starting_time: Optional[time] = None,
+        end_time: Optional[time] = None,
         people_num: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
-        if start_time is not None and end_time is not None:
-            self._validate_times(start_time, end_time)
+        if starting_time is not None and end_time is not None:
+            self._validate_times(starting_time, end_time)
         if people_num is not None:
             self._validate_people(people_num)
         return self.tour_repository.update_tour(
             schedule_id=schedule_id,
-            user_id=user_id,
-            game_id=game_id,
-            start_time=start_time,
+            User_id=User_id,
+            League_id=League_id,
+            starting_time=starting_time,
             end_time=end_time,
             people_num=people_num,
         )
 
-    def delete_tour(self, schedule_id: UUID) -> Optional[Dict[str, Any]]:
+    def delete_tour(self, schedule_id: int) -> Optional[Dict[str, Any]]:
         return self.tour_repository.delete_tour(schedule_id)
 
     @staticmethod
-    def _validate_times(start_time: datetime, end_time: datetime) -> None:
+    def _validate_times(start_time: time, end_time: time) -> None:
         if start_time >= end_time:
             raise ValueError("일정 시작시간은 종료시간보다 빨라야 합니다.")
 

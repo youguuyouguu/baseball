@@ -36,6 +36,9 @@ export function loadKakao() {
     script.onload = () => window.kakao.maps.load(() => resolve(window.kakao));
     script.onerror = () => {
       kakaoPromise = undefined;
+      console.log('Kakao key:', key);
+      console.error('[Kakao] script load 실패', event);
+      console.error('[Kakao] URL:', script.src);
       reject(new Error('카카오맵 스크립트를 불러오지 못했습니다.'));
     };
     document.head.appendChild(script);

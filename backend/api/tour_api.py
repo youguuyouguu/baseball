@@ -1,6 +1,5 @@
-from datetime import datetime
+from datetime import time
 from typing import Optional
-from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -9,19 +8,19 @@ from service.Tour_service import TourService
 
 
 class TourCreate(BaseModel):
-    schedule_id: UUID = Field(default_factory=uuid4)
-    user_id: UUID
-    game_id: UUID
-    start_time: datetime
-    end_time: datetime
+    schedule_id: Optional[int] = None
+    User_id: int
+    League_id: int
+    starting_time: time
+    end_time: time
     people_num: int = Field(gt=0)
 
 
 class TourUpdate(BaseModel):
-    user_id: Optional[UUID] = None
-    game_id: Optional[UUID] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    User_id: Optional[int] = None
+    League_id: Optional[int] = None
+    starting_time: Optional[time] = None
+    end_time: Optional[time] = None
     people_num: Optional[int] = Field(default=None, gt=0)
 
 
@@ -45,7 +44,7 @@ def create_tour_router(tour_service: TourService):
         return result
 
     @router.get("/{schedule_id}")
-    def get_tour(schedule_id: UUID):
+    def get_tour(schedule_id: int):
         result = tour_service.get_tour(schedule_id)
         if result is None:
             raise HTTPException(status_code=404, detail="Tour를 찾을 수 없습니다.")
@@ -56,7 +55,7 @@ def create_tour_router(tour_service: TourService):
         return tour_service.get_tours()
 
     @router.put("/{schedule_id}")
-    def update_tour(schedule_id: UUID, tour: TourUpdate):
+    def update_tour(schedule_id: int, tour: TourUpdate):
         try:
             result = tour_service.update_tour(
                 schedule_id=schedule_id,
@@ -70,7 +69,7 @@ def create_tour_router(tour_service: TourService):
         return result
 
     @router.delete("/{schedule_id}")
-    def delete_tour(schedule_id: UUID):
+    def delete_tour(schedule_id: int):
         result = tour_service.delete_tour(schedule_id)
         if result is None:
             raise HTTPException(status_code=404, detail="삭제할 Tour를 찾을 수 없습니다.")

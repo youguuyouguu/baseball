@@ -2,10 +2,9 @@
 
 from datetime import date
 from typing import Optional
-from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from service.League_service import LeagueService
 
@@ -30,7 +29,7 @@ class LeagueCreateRequest(BaseModel):
     }
     """
 
-    League_id: UUID = Field(default_factory=uuid4)
+    League_id: Optional[int] = None
     external_game_id: Optional[str] = None
     game_date: str
     game_time: str
@@ -121,7 +120,7 @@ def create_League_router(
     # ==================================================
 
     @router.get("/{League_id}")
-    def get_League(League_id: UUID):
+    def get_League(League_id: int):
         """
         특정 경기 일정을 조회한다.
         """
@@ -160,7 +159,7 @@ def create_League_router(
 
     @router.put("/{League_id}")
     def update_League(
-        League_id: UUID,
+        League_id: int,
         request: LeagueUpdateRequest
     ):
         """
@@ -199,7 +198,7 @@ def create_League_router(
     # ==================================================
 
     @router.delete("/{League_id}")
-    def delete_League(League_id: UUID):
+    def delete_League(League_id: int):
         """
         특정 경기 일정을 삭제한다.
         """

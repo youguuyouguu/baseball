@@ -1,7 +1,6 @@
 from datetime import date as date_type, timedelta
 from enum import Enum
-from typing import Optional
-from uuid import NAMESPACE_URL, uuid5
+import hashlib
 
 import requests
 
@@ -46,8 +45,7 @@ def _parse_game(raw: dict) -> dict:
     )
     external_game_id = str(raw["G_ID"])
     return {
-        "League_id": uuid5(NAMESPACE_URL, f"kbo:{external_game_id}"),
-        "external_game_id": external_game_id,
+        "League_id": _stable_game_id(external_game_id),
         "game_date": _format_game_date(raw.get("G_DT", "")),
         "game_time": raw.get("G_TM", ""),
         "game_name": "KBO 정규시즌",
@@ -55,6 +53,12 @@ def _parse_game(raw: dict) -> dict:
         "stadium_address": address,
         "status": _map_game_status(raw.get("GAME_STATE_SC", "")).value,
     }
+
+
+def _stable_game_id(external_game_id: str) -> int:
+    """KBO의 영숫자 경기 ID를 기존 bigint PK에 맞춘다."""
+    digest = hashlib.sha256(external_game_id.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") & 0x1FFFFFFFFFFFFF
 
 
 def _format_game_date(value: str) -> str:

@@ -1,6 +1,4 @@
 from typing import Optional, List, Dict, Any
-from uuid import UUID
-
 from repository.User_repository import UserRepository
 
 
@@ -26,9 +24,9 @@ class UserService:
 
     def create_user(
         self,
-        user_id: UUID,
         email: str,
-        nickname: str
+        nickname: str,
+        user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         새로운 사용자를 생성한다.
@@ -43,7 +41,7 @@ class UserService:
             raise ValueError("닉네임은 필수입니다.")
 
         # 동일한 User_id를 가진 사용자가 이미 존재하는지 확인한다.
-        existing_user = self.user_repository.get_user(user_id)
+        existing_user = self.user_repository.get_user(user_id) if user_id is not None else None
 
         if existing_user is not None:
             raise ValueError("이미 존재하는 User_id입니다.")
@@ -61,7 +59,7 @@ class UserService:
 
     def get_user(
         self,
-        user_id: UUID,
+        user_id: int,
     ) -> Optional[Dict[str, Any]]:
         """
         User_id를 이용하여 사용자 한 명을 조회한다.
@@ -84,7 +82,7 @@ class UserService:
 
     def update_user(
         self,
-        user_id: UUID,
+        user_id: int,
         email: Optional[str] = None,
         nickname: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
@@ -106,7 +104,7 @@ class UserService:
     # DELETE
     # =========================
 
-    def delete_user(self, user_id: UUID) -> Optional[Dict[str, Any]]:
+    def delete_user(self, user_id: int) -> Optional[Dict[str, Any]]:
         """
         User_id를 이용하여 사용자 한 명을 삭제한다.
         """

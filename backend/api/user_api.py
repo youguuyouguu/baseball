@@ -1,8 +1,6 @@
 from typing import Optional
-from uuid import UUID, uuid4
-
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from supabase import Client
 
 from repository.User_repository import UserRepository
@@ -13,7 +11,7 @@ from repository.User_repository import UserRepository
 # ============================================================
 
 class UserCreate(BaseModel):
-    user_id: UUID = Field(default_factory=uuid4)
+    user_id: Optional[int] = None
     email: str
     nickname: str
 
@@ -65,7 +63,7 @@ def create_user_router(supabase: Client):
     # ========================================================
 
     @router.get("/{user_id}")
-    def get_user(user_id: UUID):
+    def get_user(user_id: int):
 
         result = user_repository.get_user(user_id)
 
@@ -112,7 +110,7 @@ def create_user_router(supabase: Client):
 
     @router.put("/{user_id}")
     def update_user(
-        user_id: UUID,
+        user_id: int,
         user: UserUpdate
     ):
 
@@ -136,7 +134,7 @@ def create_user_router(supabase: Client):
     # ========================================================
 
     @router.delete("/{user_id}")
-    def delete_user(user_id: UUID):
+    def delete_user(user_id: int):
 
         result = user_repository.delete_user(user_id)
 
