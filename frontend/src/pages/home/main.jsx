@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '../../components/common/bottom_navigation';
-import { getUpcomingLeagues } from '../../api';
+import { getToursByUser, getUpcomingLeagues } from '../../api';
 
 function formatMonth(monthKey) {
   const [year, month] = monthKey.split('-');
@@ -17,6 +17,16 @@ function formatDate(gameDate) {
   }).format(date);
 }
 
+function timeToMinutes(value) {
+  if (!value) return null;
+  const [hours, minutes] = value.slice(0, 5).split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function formatTourTime(value) {
+  return value ? value.slice(0, 5) : '--:--';
+}
+
 function Home() {
   const navigate = useNavigate();
   const [games, setGames] = useState([]);
@@ -24,6 +34,8 @@ function Home() {
   const [monthIndex, setMonthIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tours, setTours] = useState([]);
+  const [tourError, setTourError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -43,6 +55,37 @@ function Home() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user?.User_id) return undefined;
+    let isMounted = true;
+    getToursByUser(user.User_id)
+      .then((result) => {
+        if (isMounted) setTours(result);
+      })
+      .catch((requestError) => {
+        if (isMounted) setTourError(requestError.message);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const activeTour = useMemo(() => {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const current = tours.find((tour) => {
+      const start = timeToMinutes(tour.starting_time);
+      const end = timeToMinutes(tour.end_time);
+      return start !== null && end !== null && start <= currentMinutes && currentMinutes <= end;
+    });
+    if (current) return { tour: current, isCurrent: true };
+    const next = tours
+      .filter((tour) => timeToMinutes(tour.starting_time) > currentMinutes)
+      .sort((left, right) => timeToMinutes(left.starting_time) - timeToMinutes(right.starting_time))[0];
+    return next ? { tour: next, isCurrent: false } : null;
+  }, [tours]);
 
   const gamesByMonth = useMemo(() => {
     const grouped = games.reduce((months, game) => {
@@ -66,9 +109,16 @@ function Home() {
 
       <section className="section" aria-labelledby="upcoming-title">
         <h2 className="section-title" id="upcoming-title">다가오는 일정</h2>
-        <div className="empty-card">
-          <p className="muted">현재 진행 중인 여행이 없습니다.</p>
-        </div>
+        {tourError && <p className="alert">{tourError}</p>}
+        {!tourError && !activeTour && <div className="empty-card"><p className="muted">현재 진행 중인 일정이 없습니다.</p></div>}
+        {activeTour && <article className="tour-card tour-card-current">
+          <div>
+            <span className="tour-status">{activeTour.isCurrent ? '진행 중' : '다음 일정'}</span>
+            <h3>원정 일정</h3>
+            <p>{formatTourTime(activeTour.tour.starting_time)} - {formatTourTime(activeTour.tour.end_time)}</p>
+          </div>
+          <span className="tour-people">{activeTour.tour.people_num}명</span>
+        </article>}
       </section>
 
       <section className="section" aria-labelledby="games-title">

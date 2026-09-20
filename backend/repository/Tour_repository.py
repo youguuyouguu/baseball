@@ -47,6 +47,26 @@ class TourRepository:
         response = self.supabase.table(self.TABLE_NAME).select("*").execute()
         return response.data
 
+    def get_tours_by_user(self, User_id: int) -> List[Dict[str, Any]]:
+        response = (
+            self.supabase
+            .table(self.TABLE_NAME)
+            .select("*")
+            .eq("User_id", User_id)
+            .execute()
+        )
+        return response.data
+
+    def get_tours_by_user(self, User_id: int) -> List[Dict[str, Any]]:
+        response = (
+            self.supabase
+            .table(self.TABLE_NAME)
+            .select("*")
+            .eq("User_id", User_id)
+            .execute()
+        )
+        return response.data
+
     def update_tour(
         self,
         schedule_id: int,

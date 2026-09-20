@@ -55,6 +55,15 @@ export async function createTour(tour) {
 	return response.json();
 }
 
+export async function getToursByUser(UserId) {
+	const response = await fetch(`${API_BASE_URL}/tours/user/${UserId}`);
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({}));
+		throw new Error(error.detail || '일정 목록을 불러오지 못했습니다.');
+	}
+	return response.json();
+}
+
 export async function createScheduleDetail(detail) {
 	const response = await fetch(`${API_BASE_URL}/schedule-details/`, {
 		method: 'POST',

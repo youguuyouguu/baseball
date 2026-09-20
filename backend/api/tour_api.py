@@ -54,6 +54,14 @@ def create_tour_router(tour_service: TourService):
     def get_tours():
         return tour_service.get_tours()
 
+    @router.get("/user/{User_id}")
+    def get_tours_by_user(User_id: int):
+        return tour_service.get_tours_by_user(User_id)
+
+    @router.get("/user/{User_id}")
+    def get_tours_by_user(User_id: int):
+        return tour_service.get_tours_by_user(User_id)
+
     @router.put("/{schedule_id}")
     def update_tour(schedule_id: int, tour: TourUpdate):
         try:

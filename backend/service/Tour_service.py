@@ -36,6 +36,12 @@ class TourService:
     def get_tours(self) -> List[Dict[str, Any]]:
         return self.tour_repository.get_tours()
 
+    def get_tours_by_user(self, User_id: int) -> List[Dict[str, Any]]:
+        return self.tour_repository.get_tours_by_user(User_id)
+
+    def get_tours_by_user(self, User_id: int) -> List[Dict[str, Any]]:
+        return self.tour_repository.get_tours_by_user(User_id)
+
     def update_tour(
         self,
         schedule_id: int,
