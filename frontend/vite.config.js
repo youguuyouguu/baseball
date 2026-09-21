@@ -3,4 +3,5 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  allowedHosts: ['baseball-production-ad28.up.railway.app'],
 });
