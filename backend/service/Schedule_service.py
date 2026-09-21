@@ -130,7 +130,7 @@ class ScheduleService:
 
         place_node = timed[position]
         hour = str(self._datetime(place_node["arrival_time"]).hour)
-        congestion = congestion_cache.get(place["id"], {}).get(hour, 0.0)
+        congestion = self._congestion_rate(congestion_cache.get(place["id"]), hour)
         place_node["congestion"] = congestion
         place_node["congestion_warning"] = congestion >= self.HIGH_CONGESTION_THRESHOLD
         cost = self._travel_minutes(candidate, position, travel_times)
@@ -200,6 +200,20 @@ class ScheduleService:
         if value < 0:
             raise ValueError("이동시간은 0 이상이어야 합니다.")
         return value
+
+    @staticmethod
+    def _congestion_rate(value, hour: str) -> float:
+        """Accept daily API results, legacy hourly maps, and missing data."""
+        if value is None:
+            return 0.0
+        if isinstance(value, (int, float)):
+            return float(value)
+        if not isinstance(value, dict):
+            return 0.0
+        if value.get("rate") is not None:
+            return float(value["rate"])
+        hourly_value = value.get(hour, 0.0)
+        return float(hourly_value) if isinstance(hourly_value, (int, float)) else 0.0
 
     @staticmethod
     def _place_node(place):

@@ -63,6 +63,8 @@ function buildScheduleRequest(schedule, game, selectedPlaces) {
       id: place.id,
       name: place.name,
       location: location(place.id, place.name, place.address),
+      address: place.address,
+      category: place.category,
       visit_minutes: place.visit_minutes,
       opening_time: place.opening_time,
       closing_time: place.closing_time,
@@ -182,13 +184,14 @@ function AddTouristSpot() {
         people_num: Number(state.schedule.people),
       });
 
-      if (tour.Schdule_id == null) {
+      const scheduleId = tour.schedule_id ?? tour.Schdule_id;
+      if (scheduleId == null) {
         console.log('Tour 생성 후 Schedule_id:', tour);
         throw new Error('생성된 일정의 schedule_id를 받지 못했습니다.');
       }
       const detailItems = result.items.filter((item) => item.type === 'place');
       const details = await Promise.all(
-        detailItems.map((item) => createScheduleDetail(createDetailPayload(tour.Schdule_id, item))),
+        detailItems.map((item) => createScheduleDetail(createDetailPayload(scheduleId, item))),
       );
 
       navigate('/schedule/all', { state: { schedule: state.schedule, game: state.game, places: addedPlaces, generatedSchedule: result, tour, details } });
